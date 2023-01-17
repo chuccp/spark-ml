@@ -21,11 +21,11 @@ object RAls {
 
     var userIndexer = new StringIndexer().setInputCol("userId").setOutputCol("userIdIndex").fit(userVideoDf)
 
-    var userIndexerdf = userIndexer.transform(userVideoDf)
+    var userIndexerdf = userIndexer.transform(userVideoDf).persist(StorageLevel.DISK_ONLY)
 
     var videoIndexer = new StringIndexer().setInputCol("videoId").setOutputCol("videoIdIndex").fit(userIndexerdf)
 
-    var videoIndexerdf = videoIndexer.transform(userIndexerdf)
+    var videoIndexerdf = videoIndexer.transform(userIndexerdf).persist(StorageLevel.DISK_ONLY)
 
 
     val als = new ALS()
@@ -40,17 +40,17 @@ object RAls {
       .setSeed(1l);
 
     val model = als.fit(videoIndexerdf)
-    val userRecs = model.recommendForAllUsers(130)
+    val userRecs = model.recommendForAllUsers(130).persist(StorageLevel.DISK_ONLY)
 
 
-    var rest = userRecs.withColumn("videoidRating",explode($"recommendations")).drop($"recommendations")
+    var rest = userRecs.withColumn("videoidRating",explode($"recommendations")).drop($"recommendations").persist(StorageLevel.DISK_ONLY)
 
-    rest =  rest.withColumn("videoIdIndex",col(("videoidRating"))("videoIdIndex")).drop($"videoidRating")
+    rest =  rest.withColumn("videoIdIndex",col(("videoidRating"))("videoIdIndex")).drop($"videoidRating").persist(StorageLevel.DISK_ONLY)
 
     val indexToString = new IndexToString().setInputCol("userIdIndex").setOutputCol("useridString").setLabels(userIndexer.labels)
     val kankeIDToString = new IndexToString().setInputCol("videoIdIndex").setOutputCol("videoidString").setLabels(videoIndexer.labels)
-    val recRecult = indexToString.transform(rest)
-    val recRecult2 = kankeIDToString.transform(recRecult)
+    val recRecult = indexToString.transform(rest).persist(StorageLevel.DISK_ONLY)
+    val recRecult2 = kankeIDToString.transform(recRecult).persist(StorageLevel.DISK_ONLY)
     recRecult2.show(false)
 
 
