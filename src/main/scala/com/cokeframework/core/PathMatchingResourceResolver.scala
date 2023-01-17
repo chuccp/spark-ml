@@ -20,7 +20,11 @@ class PathMatchingResourceResolver {
 
   def doFindPathMatchingFileResources(rootDirResource: Resource): Set[Resource] = {
     val resourceSet = Set[Resource]()
-    return resourceSet
+
+    val file = rootDirResource.getFile.getAbsoluteFile
+
+
+    resourceSet
   }
 
 

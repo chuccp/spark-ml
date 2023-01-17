@@ -2,7 +2,9 @@ package com.cokeframework.core
 
 import com.cokeframework.core.Resource.{URL_PROTOCOL_FILE, URL_PROTOCOL_JAR}
 
+import java.io.File
 import java.net.URL
+
 
 class Resource(var url: URL) {
 
@@ -23,6 +25,11 @@ class Resource(var url: URL) {
     } else {
       false
     }
+  }
+
+
+  def getFile(): File = {
+    new File(url.getFile)
   }
 
 }
