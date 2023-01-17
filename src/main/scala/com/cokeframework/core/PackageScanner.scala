@@ -16,6 +16,7 @@ class PackageScanner {
     pathMatchingResourceResolver.doFindAllClassPathResources(resources).foreach(v => {
       if (v.isFile()) {
         pathMatchingResourceResolver.doFindPathMatchingFileResources(v).foreach(s => {
+          println(s.url)
           resourceSet += s
         })
       }
