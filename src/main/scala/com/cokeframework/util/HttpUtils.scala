@@ -1,13 +1,10 @@
-package com.kanke.util
+package com.cokeframework.util
 
 import okhttp3.{MediaType, OkHttpClient, Request, RequestBody}
 
-import scala.util.parsing.json.JSONArray
-
-
 object HttpUtils {
 
-  def get(url:String):String={
+  def get(url: String): String = {
     val client = new OkHttpClient()
     val request = new Request.Builder().url(url).build()
     try {
@@ -21,7 +18,7 @@ object HttpUtils {
   }
 
 
-  def postJson(url:String,jsonBody:String):String={
+  def postJson(url: String, jsonBody: String): String = {
     val client = new OkHttpClient()
     val body = RequestBody.create(jsonBody, MediaType.get("application/json; charset=utf-8"))
     val request = new Request.Builder().url(url).post(body).build()

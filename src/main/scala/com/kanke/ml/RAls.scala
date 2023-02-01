@@ -1,10 +1,10 @@
-package com.kanke
+package com.kanke.ml
 
 import org.apache.spark.ml.feature.{IndexToString, RegexTokenizer, StringIndexer}
 import org.apache.spark.ml.recommendation.ALS
 import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.functions.{col, explode, split}
-import org.apache.spark.sql.types.{DataType, IntegerType}
+import org.apache.spark.sql.functions.{col, explode}
+import org.apache.spark.sql.types.IntegerType
 import org.apache.spark.storage.StorageLevel
 
 object RAls {
@@ -43,16 +43,15 @@ object RAls {
     val userRecs = model.recommendForAllUsers(130).persist(StorageLevel.DISK_ONLY)
 
 
-    var rest = userRecs.withColumn("videoidRating",explode($"recommendations")).drop($"recommendations").persist(StorageLevel.DISK_ONLY)
+    var rest = userRecs.withColumn("videoidRating", explode($"recommendations")).drop($"recommendations").persist(StorageLevel.DISK_ONLY)
 
-    rest =  rest.withColumn("videoIdIndex",col(("videoidRating"))("videoIdIndex")).drop($"videoidRating").persist(StorageLevel.DISK_ONLY)
+    rest = rest.withColumn("videoIdIndex", col(("videoidRating"))("videoIdIndex")).drop($"videoidRating").persist(StorageLevel.DISK_ONLY)
 
     val indexToString = new IndexToString().setInputCol("userIdIndex").setOutputCol("useridString").setLabels(userIndexer.labels)
     val kankeIDToString = new IndexToString().setInputCol("videoIdIndex").setOutputCol("videoidString").setLabels(videoIndexer.labels)
     val recRecult = indexToString.transform(rest).persist(StorageLevel.DISK_ONLY)
     val recRecult2 = kankeIDToString.transform(recRecult).persist(StorageLevel.DISK_ONLY)
     recRecult2.show(false)
-
 
 
   }

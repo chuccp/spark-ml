@@ -1,14 +1,13 @@
-package com.kanke
+package com.kanke.ml
 
-import org.apache.spark.ml.feature.{CountVectorizer, CountVectorizerModel, StopWordsRemover}
+import org.apache.spark.ml.feature.StopWordsRemover
 import org.apache.spark.sql.SparkSession
 
 object CountVectorizerk {
 
-  def main(array: Array[String]): Unit ={
+  def main(array: Array[String]): Unit = {
 
     val sparkSession = SparkSession.builder().master("local").appName("als").getOrCreate()
-    import sparkSession.implicits._
 
     val remover = new StopWordsRemover()
       .setInputCol("raw")
@@ -20,7 +19,6 @@ object CountVectorizerk {
     )).toDF("id", "raw")
 
     remover.transform(dataSet).show(false)
-
 
 
   }
