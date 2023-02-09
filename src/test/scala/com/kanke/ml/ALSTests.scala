@@ -3,33 +3,44 @@ package com.kanke.ml
 import org.apache.spark.ml.feature.{IndexToString, RegexTokenizer, StringIndexer}
 import org.apache.spark.ml.recommendation.ALS
 import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.functions.{col, explode}
+import org.apache.spark.sql.functions.{col, collect_set, concat_ws, explode}
 import org.apache.spark.sql.types.IntegerType
 import org.apache.spark.storage.StorageLevel
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
+
+import java.io.File
 
 @SpringBootTest
 class ALSTests {
 
-  @Test
-  def yyyyyyyy(): Unit = {
+  @Value("${log.path}")
+  var logPath: String = _
 
+  @Test
+  def ZTests(): Unit = {
     val spark = SparkSession.builder().master("local").appName("als").getOrCreate()
     import spark.implicits._
-    var logdf = spark.read.textFile("user.log").toDF("value")
+    val logFile = new File(logPath, "user.log")
+
+    println(logFile.getAbsolutePath)
+
+    val logDf = spark.read.textFile(logFile.getAbsolutePath).toDF("value")
     val regexTokenizer = new RegexTokenizer().setInputCol("value").setOutputCol("words").setPattern(";");
-    var regexTokenizerDf = regexTokenizer.transform(logdf);
-    val userVideoDf = regexTokenizerDf.withColumn("userId", $"words".getItem(0)).withColumn("videoId", $"words".getItem(1)).withColumn("score", $"words".getItem(2).cast(IntegerType)).select("userId", "videoId", "score")
+    val regexTokenizerDf = regexTokenizer.transform(logDf).drop("value")
 
+    val userVideoDf = regexTokenizerDf.withColumn("userId", $"words".getItem(0))
+      .withColumn("videoId", $"words".getItem(1))
+      .withColumn("score", $"words".getItem(2).cast(IntegerType)).drop("words")
 
-    var userIndexer = new StringIndexer().setInputCol("userId").setOutputCol("userIdIndex").fit(userVideoDf)
+    val userIndexer = new StringIndexer().setInputCol("userId").setOutputCol("userIdIndex").fit(userVideoDf)
 
-    var userIndexerdf = userIndexer.transform(userVideoDf).persist(StorageLevel.DISK_ONLY)
+    val userIndexerdf = userIndexer.transform(userVideoDf).persist(StorageLevel.MEMORY_ONLY)
 
-    var videoIndexer = new StringIndexer().setInputCol("videoId").setOutputCol("videoIdIndex").fit(userIndexerdf)
+    val videoIndexer = new StringIndexer().setInputCol("videoId").setOutputCol("videoIdIndex").fit(userIndexerdf)
 
-    var videoIndexerdf = videoIndexer.transform(userIndexerdf).persist(StorageLevel.DISK_ONLY)
+    val videoIndexerdf = videoIndexer.transform(userIndexerdf).persist(StorageLevel.MEMORY_ONLY)
 
 
     val als = new ALS()
@@ -44,18 +55,29 @@ class ALSTests {
       .setSeed(1l);
 
     val model = als.fit(videoIndexerdf)
-    val userRecs = model.recommendForAllUsers(130).persist(StorageLevel.DISK_ONLY)
+
+    val userRecs = model.recommendForAllUsers(3).persist(StorageLevel.MEMORY_ONLY)
+
+    //    userRecs.show(false)
 
 
-    var rest = userRecs.withColumn("videoidRating", explode($"recommendations")).drop($"recommendations").persist(StorageLevel.DISK_ONLY)
-
-    rest = rest.withColumn("videoIdIndex", col(("videoidRating"))("videoIdIndex")).drop($"videoidRating").persist(StorageLevel.DISK_ONLY)
-
+    var rest = userRecs.withColumn("videoidRating", explode($"recommendations")).drop($"recommendations").persist(StorageLevel.MEMORY_ONLY)
+    rest = rest.withColumn("videoIdIndex", col("videoidRating")("videoIdIndex")).drop($"videoidRating").persist(StorageLevel.MEMORY_ONLY)
     val indexToString = new IndexToString().setInputCol("userIdIndex").setOutputCol("useridString").setLabels(userIndexer.labels)
     val kankeIDToString = new IndexToString().setInputCol("videoIdIndex").setOutputCol("videoidString").setLabels(videoIndexer.labels)
-    val recRecult = indexToString.transform(rest).persist(StorageLevel.DISK_ONLY)
-    val recRecult2 = kankeIDToString.transform(recRecult).persist(StorageLevel.DISK_ONLY)
-    recRecult2.show(false)
-  }
+    val recRecult = indexToString.transform(rest).persist(StorageLevel.MEMORY_ONLY)
+    val recRecult2 = kankeIDToString.transform(recRecult).persist(StorageLevel.MEMORY_ONLY)
 
+
+    val recRecult3 = recRecult2.groupBy("useridString").agg(collect_set("videoidString").as("vvv")).withColumn("videoids", concat_ws(";", $"vvv")).drop("vvv")
+
+    recRecult3.show(false)
+
+
+    recRecult3.foreach((v) => {
+      println(v.get(0) + "=====" + v.get(1))
+    })
+
+
+  }
 }
