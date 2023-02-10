@@ -1,0 +1,16 @@
+<configuration scan="true" scanPeriod="60 seconds" debug="false">
+    <property name="LOG_HOME" value="./log"/>
+    <property name="APP_NAME" value="spark-ml"/>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>%yellow([%-5level]) [%d{yyyy-MM-dd HH:mm:ss.SSS}] %highlight([%X{X-B3-TraceId:-}] %red([%X{T}]) %boldMagenta([%logger{50}])) %cyan( [%line] - [%msg]%n)
+            </pattern>
+        </encoder>
+    </appender>
+
+    <root level="ERROR">
+        <appender-ref ref="STDOUT"/>
+    </root>
+
+</configuration>

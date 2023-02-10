@@ -9,7 +9,7 @@ class ElasticsearchConfigure {
   @Bean
   def elasticsearchRestTemplate(): ElasticsearchRestTemplate = {
     val restElasticsearchConfig = new RestElasticsearchConfig()
-    restElasticsearchConfig.addUrls("http://192.168.1.131:9200")
+//    restElasticsearchConfig.addUrls("http://192.168.1.131:9200")
     new ElasticsearchRestTemplate(restElasticsearchConfig);
   }
 
