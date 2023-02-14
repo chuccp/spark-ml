@@ -63,8 +63,8 @@ class ALSTests {
 
     var rest = userRecs.withColumn("videoidRating", explode($"recommendations")).drop($"recommendations").persist(StorageLevel.MEMORY_ONLY)
     rest = rest.withColumn("videoIdIndex", col("videoidRating")("videoIdIndex")).drop($"videoidRating").persist(StorageLevel.MEMORY_ONLY)
-    val indexToString = new IndexToString().setInputCol("userIdIndex").setOutputCol("useridString").setLabels(userIndexer.labels)
-    val kankeIDToString = new IndexToString().setInputCol("videoIdIndex").setOutputCol("videoidString").setLabels(videoIndexer.labels)
+    val indexToString = new IndexToString().setInputCol("userIdIndex").setOutputCol("useridString").setLabels(userIndexer.labelsArray.head)
+    val kankeIDToString = new IndexToString().setInputCol("videoIdIndex").setOutputCol("videoidString").setLabels(videoIndexer.labelsArray.head)
     val recRecult = indexToString.transform(rest).persist(StorageLevel.MEMORY_ONLY)
     val recRecult2 = kankeIDToString.transform(recRecult).persist(StorageLevel.MEMORY_ONLY)
 
