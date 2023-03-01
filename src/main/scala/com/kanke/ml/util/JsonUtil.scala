@@ -7,8 +7,12 @@ object JsonUtil {
 
   def ObjectToString(any: Object): String = {
     val mapper = new ObjectMapper
-    mapper.registerModule(DefaultScalaModule)
     mapper.writeValueAsString(any)
   }
 
+  def scalaObjectToString(any: Object): String = {
+    val mapper = new ObjectMapper
+    mapper.registerModule(DefaultScalaModule)
+    mapper.writeValueAsString(any)
+  }
 }

@@ -1,7 +1,7 @@
 package com.kanke.ml.elasticsearch
 
 import com.kanke.ml.elasticsearch.`type`.ActionType
-import com.kanke.ml.elasticsearch.query.{Page, Response}
+import com.kanke.ml.elasticsearch.query.{MatchAllQueryBuilder, Page, Query, QueryBuilder, Response, Scroll}
 
 
 class ElasticsearchRestTemplate(restElasticsearchConfig: RestElasticsearchConfig) {
@@ -24,11 +24,20 @@ class ElasticsearchRestTemplate(restElasticsearchConfig: RestElasticsearchConfig
   }
 
   def doSearch[T](indexName: String, typeName: String, json: String, cls: Class[T]): Response[T] = {
-    this.doRequest(indexName, typeName, ActionType.SEARCH, json, cls)
+    this.doRequest(indexName, typeName, ActionType.SEARCH, null, json, cls)
   }
 
-  private def doRequest[T](indexName: String, typeName: String, action: ActionType.ActionType, json: String, cls: Class[T]): Response[T] = {
-    val response = restElasticsearchConfig.getHttpServer().request(indexName, typeName, action, json)
+  def doSearchScroll[T](scrollId: String, scroll: Scroll, cls: Class[T]): Response[T] = {
+    val response = restElasticsearchConfig.getHttpServer().requestScroll(scrollId, scroll)
+    new Response(response, cls)
+  }
+
+  def doSearch[T](indexName: String, typeName: String, query: Query, cls: Class[T]): Response[T] = {
+    this.doRequest(indexName, typeName, ActionType.SEARCH, query.getScroll(), query.toQueryString(), cls)
+  }
+
+  private def doRequest[T](indexName: String, typeName: String, action: ActionType.ActionType, scroll: Scroll, json: String, cls: Class[T]): Response[T] = {
+    val response = restElasticsearchConfig.getHttpServer().request(indexName, typeName, action, scroll, json)
     new Response(response, cls)
   }
 

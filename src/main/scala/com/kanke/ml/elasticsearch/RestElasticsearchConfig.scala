@@ -1,15 +1,21 @@
 package com.kanke.ml.elasticsearch
 
 
-import org.apache.commons.lang3.StringUtils
+import org.apache.commons.lang3.{RandomUtils, StringUtils}
 
 class RestElasticsearchConfig {
-  private var urls = List[String]()
+  var urls = List[String]()
+
+  var index_ : String = _
+
+  var type_ : String = _
+
+  var version_ : String = _
 
   def addUrls(urls: String*): Unit = {
     urls.foreach(url => {
       if (StringUtils.endsWith(url, "/")) {
-        this.urls = this.urls :+ (url)
+        this.urls = this.urls :+ url
       } else {
         this.urls = this.urls :+ (url + "/")
       }
@@ -18,7 +24,8 @@ class RestElasticsearchConfig {
 
 
   def getHttpServer(): HttpServer = {
-    new HttpServer(urls.apply(0))
+    val index = RandomUtils.nextInt(0, urls.length)
+    new HttpServer(urls.apply(index))
   }
 
 }

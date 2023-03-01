@@ -26,6 +26,9 @@ class ALSTests {
 
     println(logFile.getAbsolutePath)
 
+    
+
+
     val logDf = spark.read.textFile(logFile.getAbsolutePath).toDF("value")
     val regexTokenizer = new RegexTokenizer().setInputCol("value").setOutputCol("words").setPattern(";");
     val regexTokenizerDf = regexTokenizer.transform(logDf).drop("value")

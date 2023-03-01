@@ -1,6 +1,5 @@
 package com.kanke.ml
 
-import com.kanke.ml.elasticsearch.query.Query
 import com.kanke.ml.model.UserLog
 import com.kanke.ml.repository.ElasticsearchRepository
 import com.kanke.ml.task.ElasticsearchToLocalLogTask
@@ -18,28 +17,16 @@ import scala.util.control.Breaks
 class QueryElasticsearchTests {
 
 
-
   @Autowired
   var elasticsearchToLocalLogTask: ElasticsearchToLocalLogTask = null
 
   @Test
   def yyyyyyyy(): Unit = {
-    elasticsearchToLocalLogTask.ok{
-
-      "1111"
-    }
+    elasticsearchToLocalLogTask.run
   }
 
   @Test
   def AAAAAAA(): Unit = {
-
-    val query = new Query
-    query.fileName = 1
-
-
-    println(JsonUtil.ObjectToString{
-      query
-    })
 
 
   }

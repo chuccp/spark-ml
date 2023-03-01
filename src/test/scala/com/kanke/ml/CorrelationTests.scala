@@ -13,6 +13,7 @@ class CorrelationTests {
     val spark = SparkSession.builder().master("local").appName("als").getOrCreate()
     import spark.implicits._
 
+    spark.read.jdbc("","",null).toDF()
 
 
   }

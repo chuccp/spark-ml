@@ -1,13 +1,9 @@
 package com.kanke.ml.elasticsearch.query
 
-import com.fasterxml.jackson.annotation.JsonIgnore
-import com.kanke.ml.annotation.FieldValue
+trait Query {
+  def toQueryString(): String
 
-import scala.annotation.meta.{field, getter, setter}
+  def getScroll(): Scroll
 
-
-class Query {
-
-  var fileName: Int = _
 
 }

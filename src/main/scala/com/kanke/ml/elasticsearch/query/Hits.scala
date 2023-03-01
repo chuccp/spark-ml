@@ -18,7 +18,8 @@ class Hits[T](cls: Class[T], hitsJson: JsonObject) {
     while (iterator.hasNext) {
       val jsonElement = iterator.next()
       val _source = jsonElement.getAsJsonObject.getAsJsonObject("_source")
-      val t = beanMetadata.getValue(_source)
+      val _id = jsonElement.getAsJsonObject.get("_id").getAsString
+      val t = beanMetadata.getValue(_source,_id)
       list = list.+:(t)
     }
     list
