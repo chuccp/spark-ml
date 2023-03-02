@@ -1,13 +1,10 @@
 package com.kanke.ml.model
 
-import com.kanke.ml.annotation.{FieldType, FieldValue, Id}
-import jdk.nashorn.internal.objects.annotations.Setter
-
-import scala.annotation.meta.getter
+import com.kanke.ml.annotation.{FieldValue, Id}
 
 class UserLog {
 
-  def this(id: String,userId: String,videoId: String,videoType: String,playTime: Long)  {
+  def this(id: String, userId: String, videoId: String, videoType: String, playTime: Long) {
     this()
   }
 
@@ -26,4 +23,8 @@ class UserLog {
 
   @FieldValue(fieldName = "playTime")
   var playTime: Long = _
+
+
+  @FieldValue(fieldName = "addTime")
+  var createTime: Long = _
 }

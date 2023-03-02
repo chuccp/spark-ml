@@ -8,9 +8,8 @@ class ManualWrite {
 
   private var indexWriter: IndexWriter = _
 
-  def this(index: String, indexFile: File) {
+  def this(index: String, indexFactory:IndexFactory) {
     this()
-    val indexFactory = new IndexFactory(indexFile)
     indexWriter = indexFactory.getIndexWriter(index)
   }
 

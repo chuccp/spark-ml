@@ -13,9 +13,17 @@ class CorrelationTests {
     val spark = SparkSession.builder().master("local").appName("als").getOrCreate()
     import spark.implicits._
 
-    spark.read.jdbc("","",null).toDF()
+
 
 
   }
 
+  @Test
+  def run22(): Unit = {
+
+    var num:Int = 3
+
+    println(math.ceil(num.toDouble/2))
+
+  }
 }

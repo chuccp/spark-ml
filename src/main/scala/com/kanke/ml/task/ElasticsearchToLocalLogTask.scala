@@ -1,16 +1,17 @@
 package com.kanke.ml.task
 
 import com.kanke.ml.lucene.StoreTemplate
-import com.kanke.ml.model.UserLog
-import com.kanke.ml.repository.{ElasticsearchRepository, StoreRepository}
-import org.apache.lucene.document.{Document, Field, NumericDocValuesField, StringField}
+import com.kanke.ml.model.{User, UserLog}
+import com.kanke.ml.repository.{ElasticsearchRepository, UserStoreRepository}
+import com.kanke.ml.util.DocumentUtil
 import org.apache.lucene.index.Term
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.{Autowired, Value}
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 import java.util
-import java.util.ArrayList
+import java.util.Date
+import scala.collection.JavaConverters._
 import scala.util.control.Breaks
 
 @Component
@@ -18,21 +19,8 @@ class ElasticsearchToLocalLogTask {
   var log = LoggerFactory.getLogger(classOf[ElasticsearchToLocalLogTask])
   @Autowired
   var elasticsearchRepository: ElasticsearchRepository = _
-
-  private def convert(userLog: UserLog): Document = {
-    val document = new Document()
-    val idStringField = new StringField("id", userLog.id, Field.Store.YES)
-    document.add(idStringField)
-    val videoTypeStringField = new StringField("videoType", userLog.videoType, Field.Store.YES)
-    document.add(videoTypeStringField)
-    val videoIdStringField = new StringField("videoId", userLog.videoId, Field.Store.YES)
-    document.add(videoIdStringField)
-    val playTimeStringField = new NumericDocValuesField("playTime", userLog.playTime)
-    document.add(playTimeStringField)
-    val userIdStringField = new StringField("userId", userLog.userId, Field.Store.YES)
-    document.add(userIdStringField)
-    document
-  }
+  @Autowired
+  var userStoreRepository: UserStoreRepository = _
 
   def ok(unit: String): Unit = {
 
@@ -43,16 +31,16 @@ class ElasticsearchToLocalLogTask {
   var storeTemplate: StoreTemplate = _
 
   def run: Unit = {
-
+    val userMap = new util.HashMap[String, Long]()
     val userLogWrite = storeTemplate.openManualWrite("userLog")
-
     val pageSize: Int = 10000
     var response = elasticsearchRepository.queryUserLog(pageSize, "2019-02-15", classOf[UserLog])
     val hits = response.getHits()
     val hit = hits.hits()
     log.info("读取数据量：{}", hit.length)
     hit.foreach(v => {
-      userLogWrite.writeOrUpdate(new Term("id", v.id),this.convert(v))
+      userLogWrite.writeOrUpdate(new Term("id", v.id), DocumentUtil.convert(v))
+      userMap.put(v.userId, v.createTime)
     })
     if (hit.length == pageSize) {
       val loop = new Breaks;
@@ -63,7 +51,8 @@ class ElasticsearchToLocalLogTask {
           val hit = hits.hits()
           log.info("读取数据量：{}", hit.length)
           hit.foreach(v => {
-            userLogWrite.writeOrUpdate(new Term("id", v.id),this.convert(v))
+            userLogWrite.writeOrUpdate(new Term("id", v.id), DocumentUtil.convert(v))
+            userMap.put(v.userId, v.createTime)
           })
           if (hit.length == 0 || hit.length < pageSize) {
             loop.break
@@ -71,8 +60,17 @@ class ElasticsearchToLocalLogTask {
         }
       }
     }
-
     userLogWrite.flushAndCommit()
-
+    val userWrite = storeTemplate.openManualWrite("user")
+    val userList = userMap.asScala.map({
+      k => {
+        val time = new Date(k._2)
+        new User(k._1, k._1, time, time)
+      }
+    }).toList
+    userStoreRepository.filterByAddTime("user", userList).foreach { v =>
+      userWrite.writeOrUpdate(new Term("id", v.id), DocumentUtil.convert(v))
+    }
+    userWrite.flushAndCommit()
   }
 }
