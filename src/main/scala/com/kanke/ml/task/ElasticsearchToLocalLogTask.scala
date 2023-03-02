@@ -5,7 +5,7 @@ import com.kanke.ml.model.{User, UserLog}
 import com.kanke.ml.repository.{ElasticsearchRepository, UserStoreRepository}
 import com.kanke.ml.util.DocumentUtil
 import org.apache.lucene.index.Term
-import org.slf4j.LoggerFactory
+import org.apache.spark.internal.Logging
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -15,8 +15,8 @@ import scala.collection.JavaConverters._
 import scala.util.control.Breaks
 
 @Component
-class ElasticsearchToLocalLogTask {
-  var log = LoggerFactory.getLogger(classOf[ElasticsearchToLocalLogTask])
+class ElasticsearchToLocalLogTask extends Logging {
+
   @Autowired
   var elasticsearchRepository: ElasticsearchRepository = _
   @Autowired
