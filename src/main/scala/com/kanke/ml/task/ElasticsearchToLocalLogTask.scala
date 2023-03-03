@@ -1,9 +1,11 @@
 package com.kanke.ml.task
 
+import com.kanke.ml.annotation.RTask
 import com.kanke.ml.lucene.StoreTemplate
 import com.kanke.ml.model.{User, UserLog}
 import com.kanke.ml.repository.{ElasticsearchRepository, UserStoreRepository}
 import com.kanke.ml.util.DocumentUtil
+import org.apache.commons.lang3.time.{DateFormatUtils, DateUtils}
 import org.apache.lucene.index.Term
 import org.apache.spark.internal.Logging
 import org.springframework.beans.factory.annotation.Autowired
@@ -22,19 +24,21 @@ class ElasticsearchToLocalLogTask extends Logging {
   @Autowired
   var userStoreRepository: UserStoreRepository = _
 
-  def ok(unit: String): Unit = {
-
-    println(unit)
-  }
-
   @Autowired
   var storeTemplate: StoreTemplate = _
 
-  def run: Unit = {
+  @RTask("ElasticsearchToLocalLogTask2")
+  def execute(): Unit = {
+    var dateString = DateFormatUtils.format(DateUtils.addDays(new Date(), -1), "yyyy-MM-dd")
+    this.execute(dateString)
+  }
+
+  @RTask("ElasticsearchToLocalLogTask2")
+  def execute(date: String): Unit = {
     val userMap = new util.HashMap[String, Long]()
     val userLogWrite = storeTemplate.openManualWrite("userLog")
     val pageSize: Int = 10000
-    var response = elasticsearchRepository.queryUserLog(pageSize, "2019-02-15", classOf[UserLog])
+    var response = elasticsearchRepository.queryUserLog(pageSize, date, classOf[UserLog])
     val hits = response.getHits()
     val hit = hits.hits()
     log.info("读取数据量：{}", hit.length)
@@ -61,16 +65,19 @@ class ElasticsearchToLocalLogTask extends Logging {
       }
     }
     userLogWrite.flushAndCommit()
-    val userWrite = storeTemplate.openManualWrite("user")
-    val userList = userMap.asScala.map({
+    var userList = userMap.asScala.map({
       k => {
         val time = new Date(k._2)
         new User(k._1, k._1, time, time)
       }
     }).toList
-    userStoreRepository.filterByAddTime("user", userList).foreach { v =>
-      userWrite.writeOrUpdate(new Term("id", v.id), DocumentUtil.convert(v))
+    userList = userStoreRepository.filterByAddTime("user", userList)
+    if (!userList.isEmpty) {
+      val userWrite = storeTemplate.openManualWrite("user")
+      userList.foreach { v =>
+        userWrite.writeOrUpdate(new Term("id", v.id), DocumentUtil.convert(v))
+      }
+      userWrite.flushAndCommit()
     }
-    userWrite.flushAndCommit()
   }
 }

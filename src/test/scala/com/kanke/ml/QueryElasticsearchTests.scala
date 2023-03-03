@@ -22,7 +22,7 @@ class QueryElasticsearchTests {
 
   @Test
   def yyyyyyyy(): Unit = {
-    elasticsearchToLocalLogTask.run
+    elasticsearchToLocalLogTask.execute()
   }
 
   @Test

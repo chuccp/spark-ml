@@ -16,7 +16,7 @@ class UserStoreRepository {
   @Autowired
   var storeTemplate: StoreTemplate = _
 
-  def queryByIds(index: String, ids: Array[String]): Map[String, User] = {
+  private def queryByIds(index: String, ids: Array[String]): Map[String, User] = {
     val vv = ids.map { v =>
       new BytesRef(v)
     }.toList.asJava
