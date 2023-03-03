@@ -4,6 +4,7 @@ import com.kanke.ml.annotation.RTask
 import com.kanke.ml.lucene.StoreTemplate
 import com.kanke.ml.model.{User, UserLog}
 import com.kanke.ml.repository.{ElasticsearchRepository, UserStoreRepository}
+import com.kanke.ml.service.RecommendLogService
 import com.kanke.ml.util.DocumentUtil
 import org.apache.commons.lang3.time.{DateFormatUtils, DateUtils}
 import org.apache.lucene.index.Term
@@ -26,15 +27,43 @@ class ElasticsearchToLocalLogTask extends Logging {
 
   @Autowired
   var storeTemplate: StoreTemplate = _
+  @Autowired
+  var recommendLogService: RecommendLogService = _
 
   @RTask("ElasticsearchToLocalLogTask2")
   def execute(): Unit = {
-    var dateString = DateFormatUtils.format(DateUtils.addDays(new Date(), -1), "yyyy-MM-dd")
-    this.execute(dateString)
+    val dateString = DateFormatUtils.format(DateUtils.addDays(new Date(), -1), "yyyy-MM-dd")
+    val typeKey = s"ElasticsearchToLocalLogTask_${dateString}"
+    val recommendLog = recommendLogService.findRecommendLogS(typeKey)
+    this.log.info(s"执行任务：${typeKey}")
+    if (recommendLog != null) {
+      this.log.info(s"任务：${typeKey} 已经执行，忽略执行")
+    } else {
+      if (this.execute3(dateString)) {
+        recommendLogService.addRecommendLogS(typeKey)
+        this.log.info(s"执行任务：${typeKey} 完成")
+      } else {
+        this.log.info(s"执行任务：${typeKey} 失败，无数据")
+      }
+    }
   }
 
   @RTask("ElasticsearchToLocalLogTask2")
-  def execute(date: String): Unit = {
+  def execute2(date: String): Unit = {
+    val typeKey = s"ElasticsearchToLocalLogTask_${date}"
+    if (this.execute3(date)) {
+      val recommendLog = recommendLogService.findRecommendLogS(typeKey)
+      if (recommendLog == null) {
+        recommendLogService.addRecommendLogS(typeKey)
+      }
+      this.log.info(s"执行任务：${typeKey} 完成")
+    } else {
+      this.log.info(s"执行任务：${typeKey} 失败，无数据")
+    }
+  }
+
+  def execute3(date: String): Boolean = {
+    var hasData = false
     val userMap = new util.HashMap[String, Long]()
     val userLogWrite = storeTemplate.openManualWrite("userLog")
     val pageSize: Int = 10000
@@ -47,7 +76,7 @@ class ElasticsearchToLocalLogTask extends Logging {
       userMap.put(v.userId, v.createTime)
     })
     if (hit.length == pageSize) {
-      val loop = new Breaks;
+      val loop = new Breaks
       loop.breakable {
         while (true) {
           response = elasticsearchRepository.queryUserLog(response.getScrollId(), classOf[UserLog])
@@ -66,7 +95,10 @@ class ElasticsearchToLocalLogTask extends Logging {
     }
     userLogWrite.flushAndCommit()
 
-    if(!userMap.isEmpty){
+    if (userMap.size() > 10000) {
+      hasData = true
+    }
+    if (!userMap.isEmpty) {
       var userList = userMap.asScala.map({
         k => {
           val time = new Date(k._2)
@@ -82,5 +114,6 @@ class ElasticsearchToLocalLogTask extends Logging {
         userWrite.flushAndCommit()
       }
     }
+    hasData
   }
 }
