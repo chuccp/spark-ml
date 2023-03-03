@@ -1,6 +1,6 @@
 package com.kanke.ml
 
-import org.apache.commons.lang3.reflect.{MethodUtils, TypeUtils}
+import com.kanke.ml.annotation.RTask
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -15,22 +15,17 @@ class TaskTests {
   @Test
   def ZTests(): Unit = {
     val names = context.getBeanDefinitionNames
-
-    names.foreach(v=>{
-
-    val obj =   context.getBean(v)
-
-      println("===============================")
-      println(obj)
-      for(v <- obj.getClass.getMethods ){
-
-        println(v.getName)
-
-
+    names.foreach(v => {
+      val obj = context.getBean(v)
+      for (v <- obj.getClass.getMethods) {
+        val rTask = v.getAnnotation(classOf[RTask])
+        if (rTask != null) {
+          println(rTask.value() + "  " + v.getParameterCount)
+          if (v.getParameterCount == 0) {
+            v.invoke(obj)
+          }
+        }
       }
-
     })
-
-
   }
 }

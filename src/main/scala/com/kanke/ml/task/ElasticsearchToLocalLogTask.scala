@@ -65,19 +65,22 @@ class ElasticsearchToLocalLogTask extends Logging {
       }
     }
     userLogWrite.flushAndCommit()
-    var userList = userMap.asScala.map({
-      k => {
-        val time = new Date(k._2)
-        new User(k._1, k._1, time, time)
+
+    if(!userMap.isEmpty){
+      var userList = userMap.asScala.map({
+        k => {
+          val time = new Date(k._2)
+          new User(k._1, k._1, time, time)
+        }
+      }).toList
+      userList = userStoreRepository.filterByAddTime("user", userList)
+      if (!userList.isEmpty) {
+        val userWrite = storeTemplate.openManualWrite("user")
+        userList.foreach { v =>
+          userWrite.writeOrUpdate(new Term("id", v.id), DocumentUtil.convert(v))
+        }
+        userWrite.flushAndCommit()
       }
-    }).toList
-    userList = userStoreRepository.filterByAddTime("user", userList)
-    if (!userList.isEmpty) {
-      val userWrite = storeTemplate.openManualWrite("user")
-      userList.foreach { v =>
-        userWrite.writeOrUpdate(new Term("id", v.id), DocumentUtil.convert(v))
-      }
-      userWrite.flushAndCommit()
     }
   }
 }
