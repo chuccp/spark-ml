@@ -1,4 +1,4 @@
-package com.kanke.ml.model;
+package com.kanke.ml.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;

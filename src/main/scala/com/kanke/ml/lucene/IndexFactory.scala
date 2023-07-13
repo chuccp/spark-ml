@@ -26,6 +26,10 @@ class IndexFactory(var path: Path) {
       if (!indexPath.exists()) {
         indexPath.mkdirs()
       }
+      val list = indexPath.list()
+      if(list.isEmpty){
+        return null
+      }
       val fSDirectory = FSDirectory.open(indexPath.toPath)
       val reader = DirectoryReader.open(fSDirectory)
       IndexFactory.indexReaderMap.put(index, reader)

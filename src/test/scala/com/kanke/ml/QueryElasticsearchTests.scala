@@ -1,6 +1,6 @@
 package com.kanke.ml
 
-import com.kanke.ml.model.UserLog
+import com.kanke.ml.entity.UserLog
 import com.kanke.ml.repository.ElasticsearchRepository
 import com.kanke.ml.task.ElasticsearchToLocalLogTask
 import com.kanke.ml.util.JsonUtil

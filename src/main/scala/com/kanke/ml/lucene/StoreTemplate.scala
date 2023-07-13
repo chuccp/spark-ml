@@ -26,7 +26,11 @@ class StoreTemplate {
   }
 
   def getIndexSearcher(index: String): IndexSearcher = {
-    new IndexSearcher(indexFactory.getIndexReader(index))
+    val IndexReader = indexFactory.getIndexReader(index)
+    if (IndexReader == null) {
+      return null
+    }
+    new IndexSearcher(IndexReader)
   }
 
 }

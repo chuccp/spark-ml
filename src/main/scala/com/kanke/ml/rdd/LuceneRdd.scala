@@ -2,7 +2,6 @@ package com.kanke.ml.rdd
 
 import com.kanke.ml.lucene.StoreTemplate
 import com.kanke.ml.util.DocumentUtil
-import org.apache.commons.io.FileUtils
 import org.apache.lucene.search.{IndexSearcher, MatchAllDocsQuery, ScoreDoc}
 import org.apache.spark.internal.Logging
 import org.apache.spark.rdd.RDD
@@ -12,11 +11,11 @@ import java.io.File
 import java.util
 import scala.reflect.ClassTag
 
-class LuceneRdd[T: ClassTag](sc: SparkContext, number: Int, numPartitions: Int, index: String) extends RDD[T](sc, Nil) with Logging {
+class LuceneRdd[T: ClassTag](sc: SparkContext, number: Int, numPartitions: Int, index: String, indexPath: String) extends RDD[T](sc, Nil) with Logging {
 
 
   private def getIndexSearcher(): IndexSearcher = {
-    new IndexSearcher(new StoreTemplate(new File(FileUtils.getTempDirectory, "index")).getIndexReader(index))
+    new IndexSearcher(new StoreTemplate(new File(indexPath)).getIndexReader(index))
   }
 
 

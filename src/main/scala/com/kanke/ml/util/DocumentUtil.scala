@@ -1,6 +1,6 @@
 package com.kanke.ml.util
 
-import com.kanke.ml.model.{User, UserLog}
+import com.kanke.ml.entity.{User, UserLog}
 import org.apache.lucene.document.DateTools.Resolution
 import org.apache.lucene.document._
 
@@ -9,7 +9,7 @@ object DocumentUtil {
   def convert(userLog: UserLog): Document = {
     val document = new Document()
 
-    val store = Field.Store.YES
+//    val store = Field.Store.YES
 
     val idStringField = new StringField("id", userLog.id, store)
     document.add(idStringField)

@@ -1,4 +1,4 @@
-package com.kanke.ml.model
+package com.kanke.ml.entity
 
 import java.util.Date
 

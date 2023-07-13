@@ -2,7 +2,7 @@ package com.kanke.ml.task
 
 import com.kanke.ml.annotation.RTask
 import com.kanke.ml.lucene.StoreTemplate
-import com.kanke.ml.model.{User, UserLog}
+import com.kanke.ml.entity.{User, UserLog}
 import com.kanke.ml.repository.{ElasticsearchRepository, UserStoreRepository}
 import com.kanke.ml.service.RecommendLogService
 import com.kanke.ml.util.DocumentUtil
@@ -95,6 +95,8 @@ class ElasticsearchToLocalLogTask extends Logging {
     }
     userLogWrite.flushAndCommit()
 
+    this.log.info(s"用户信息保存总数量 ：${userMap.size()}")
+
     if (userMap.size() > 10000) {
       hasData = true
     }
@@ -106,12 +108,16 @@ class ElasticsearchToLocalLogTask extends Logging {
         }
       }).toList
       userList = userStoreRepository.filterByAddTime("user", userList)
+
+      this.log.info(s"用户信息可保存数量 ：${userList.size}")
+
       if (!userList.isEmpty) {
         val userWrite = storeTemplate.openManualWrite("user")
         userList.foreach { v =>
           userWrite.writeOrUpdate(new Term("id", v.id), DocumentUtil.convert(v))
         }
         userWrite.flushAndCommit()
+        this.log.info(s"用户信息保存数量完成 ：${userList.size}")
       }
     }
     hasData

@@ -1,8 +1,6 @@
 package com.kanke.ml.service;
 
-import com.kanke.ml.model.RecommendLog;
-
-import java.util.Date;
+import com.kanke.ml.entity.RecommendLog;
 
 public interface RecommendLogService {
 

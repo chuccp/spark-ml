@@ -1,7 +1,7 @@
 package com.kanke.ml.repository
 
 import com.kanke.ml.lucene.StoreTemplate
-import com.kanke.ml.model.User
+import com.kanke.ml.entity.User
 import com.kanke.ml.util.DocumentUtil
 import org.apache.lucene.search.TermInSetQuery
 import org.apache.lucene.util.BytesRef
@@ -22,6 +22,9 @@ class UserStoreRepository {
     }.toList.asJava
     val termInSetQuery = new TermInSetQuery("id", vv)
     val indexSearcher = storeTemplate.getIndexSearcher(index);
+    if (indexSearcher == null) {
+      return Map.empty
+    }
     val topDocs = indexSearcher.search(termInSetQuery, vv.size())
     topDocs.scoreDocs.map {
       v => DocumentUtil.convertToUser(indexSearcher.doc(v.doc))
